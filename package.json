@@ -6,9 +6,20 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "antd": "^3.26.6",
+    "classnames": "^2.2.6",
+    "node-sass": "^4.13.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "react-scripts": "3.3.0"
+    "react-dropzone": "^10.2.1",
+    "react-notifications": "^1.4.3",
+    "react-scripts": "3.3.0",
+    "styled-components": "^5.0.0-rc.3",
+    "subtitle": "^2.0.3",
+    "typography": "^0.16.19",
+    "typography-theme-de-young": "^0.16.19",
+    "typography-theme-irving": "^0.16.19",
+    "uuid": "^3.3.3"
   },
   "scripts": {
     "start": "react-scripts start",
