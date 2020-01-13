@@ -1,10 +1,9 @@
 import React from 'react';
 import Button from './Button'
-import {Icon} from 'antd';
 
 const rightMenu = (props) => {
     return (
-        <sectoin className="right-menu">
+        <section className="right-menu">
             <div className="right-menu__header">
                 <h3 className="right-menu__title">FIX SRT FILES</h3>
             </div>
@@ -14,9 +13,9 @@ const rightMenu = (props) => {
                 </p>
             </div>
             <div className="right-menu__footer">
-                <Button type="primary">Fix Files</Button>
+                <Button type="primary" onClick={props.onFix} >Fix Files</Button>
             </div>
-        </sectoin>
+        </section>
     )
 }
 

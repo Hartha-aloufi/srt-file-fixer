@@ -8,7 +8,8 @@ const Uploader = (props) => {
         props.onDragLeave();
         
         acceptedFiles.forEach((file) => {
-            props.onDrop({name: file.name, size : file.size, id: uuid()})
+            const id = uuid();
+            props.onDrop({name: file.name, size : file.size, id})
 
             const reader = new FileReader();
 
@@ -17,7 +18,11 @@ const Uploader = (props) => {
             }
 
             reader.onload = () => {
-                props.onLoadFile(file)
+                props.onLoadFile(id, reader.result)
+            }
+
+            reader.onprogress = (evt) => {
+                props.onLoadProgress(id, evt.loaded / evt.total)
             }
 
             reader.readAsText(file);    
