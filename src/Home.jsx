@@ -121,8 +121,8 @@ const Home = props => {
 
 
     const deleteFileHandler = useCallback((fileID) => {
-
-    })
+      
+    });
 
   return (
     <Spin spinning={fixing}>
