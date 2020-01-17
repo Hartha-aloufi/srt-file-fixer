@@ -1,7 +1,8 @@
 import React from 'react';
 import Button from './Button'
+import Settings from './Settings';
 
-const rightMenu = (props) => {
+const RightMenu = (props) => {
     return (
         <section className="right-menu">
             <div className="right-menu__header">
@@ -9,14 +10,26 @@ const rightMenu = (props) => {
             </div>
             <div className="right-menu__body">
                 <p className="right-menu__msg">
-                    All images will be compressed with the best quality and filesize ratio.
+                    All files subtitles will be fix in respect of : end time 
+                    and replacing # with new line .
                 </p>
+
+                <p className="right-menu__msg">
+                    Number of lines and their length will be checked but not fixes 
+                </p>
+
+
+              
             </div>
             <div className="right-menu__footer">
-                <Button type="primary" onClick={props.onFix} >Fix Files</Button>
+                <Button disabled={props.disableFixBtn} type="primary" onClick={props.onFix} >
+                    {
+                        props.refix ? 'Refix Files' : 'Fix Files'
+                    }
+                </Button>
             </div>
         </section>
     )
 }
 
-export default rightMenu;
+export default RightMenu;

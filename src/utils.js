@@ -2,10 +2,10 @@ import * as constants from './constants';
 
 export const parseTime = (time) => {
     const timeArr = [];
-    for(let i = 0; i < time.length; i+= 3) {
-        timeArr.push(parseInt(time.charAt(i) + '' + time.charAt(i+1)));
+    for (let i = 0; i < time.length; i += 3) {
+        timeArr.push(parseInt(time.charAt(i) + '' + time.charAt(i + 1)));
 
-        if(i === 9)
+        if (i === 9)
             timeArr[i / 3] += time.charAt(i + 3) + '';
     }
     return hourToMS(timeArr[0]) + minuteToMS(timeArr[1]) + secondToMS(timeArr[2]);
@@ -24,33 +24,44 @@ export const secondToMS = (second) => {
 
 
 export const analyizeSubtitle = (subtitle) => {
-    if(!subtitle)
+    if (!subtitle)
         throw new Error('subtitle is empty or null');
 
-    let wordsCount = 0, charsCount = 0;
+    let wordsCount = 0, charsCount = 0, linesCount = 1, firstLineChars = 0;
     let cntLetters = 0;
 
-    for(let i = 0; i < subtitle.length; i++) {
+    for (let i = 0; i < subtitle.length; i++) {
         const ch = subtitle.charAt(i);
 
         // don't count the tashkeels
-        if(isTashkeela(ch))
+        if (isTashkeela(ch))
             continue;
+        //dont count new lines as a charachter
+        else if (ch === '\n' || ch === '#') {
+            linesCount++;
+            firstLineChars = charsCount;
+        }
 
         charsCount++;
 
-        if(isLetter(ch))
+        if (isLetter(ch))
             cntLetters++
-        else if(cntLetters) {
+        else if (cntLetters) {
             wordsCount++;
-            cntLetters = 0; 
+            cntLetters = 0;
         }
     }
 
     cntLetters && wordsCount++;
 
 
-    return {wordsCount, charsCount, estimateTime: estimateTime(charsCount)};
+    return {
+        wordsCount,
+        charsCount,
+        estimateTime: estimateTime(charsCount),
+        linesCount,
+        firstLineChars
+    };
 }
 
 window.calc = analyizeSubtitle;
@@ -68,17 +79,17 @@ window.calc = analyizeSubtitle;
 export const isLetter = (ch) => {
     const ascii = ch.charCodeAt(0);
 
-    if(ascii >= 1569 && ascii <= 1594)
+    if (ascii >= 1569 && ascii <= 1594)
         return true;
-    if(ascii >= 1601 && ascii <= 1610)
+    if (ascii >= 1601 && ascii <= 1610)
         return true;
-    if(ascii >= 65 && ascii <= 90)
+    if (ascii >= 65 && ascii <= 90)
         return true;
-    if(ascii >= 97 && ascii <= 122)
+    if (ascii >= 97 && ascii <= 122)
         return true;
 
     return false;
-} 
+}
 
 /**
  * 1632 - 1641 [٩ - ٠] 
@@ -87,9 +98,9 @@ export const isLetter = (ch) => {
 export const isNumber = (ch) => {
     const ascii = ch.charCodeAt(0);
 
-    if(ascii >= 1632 && ascii <= 1641)
+    if (ascii >= 1632 && ascii <= 1641)
         return true;
-    if(ascii >= 1601 && ascii <= 1610)
+    if (ascii >= 1601 && ascii <= 1610)
         return true;
 
     return false;
@@ -106,7 +117,13 @@ export const isTashkeela = (ch) => {
 
 
 const estimateTime = (charsCount) => {
-    return charsCount / constants.AVARAGE_READ_SPEED * 1000
+    return Math.min(
+        Math.max(
+            charsCount / constants.AVARAGE_READ_SPEED * 1000,
+            constants.MIN_SUB_DURATION
+        ),
+        constants.MAX_SUB_DURATION
+    )
 }
 
 export const fixSubtitleEndTime = (sub, maxTime) => {
@@ -121,14 +138,18 @@ export const fixSubtitleEndTime = (sub, maxTime) => {
     }
 }
 
-
 export const updateSingleArrayState = (elemID, newData, arrState) => {
     const updatedArr = arrState.map(elm => {
-        if(elm.id === elemID)
-            return {...elm, ...newData}
+        if (elm.id === elemID)
+            return { ...elm, ...newData }
 
         return elm;
     });
 
     return updatedArr;
+}
+
+
+export const replaceNewLines = (subText) => {
+    return subText.replace('#', '\n');
 }

@@ -12,7 +12,6 @@ import {NotificationContainer} from 'react-notifications';
 function App() {
   return (
     <div className="App">
-      <Header />
       <Home />
       <NotificationContainer />
     </div>  

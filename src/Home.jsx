@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useReducer, useEffect } from "react";
+import Header from './Header'
 import Uploader from "./Uploader";
 import FileCard from "./FileCard";
 import RighutMenu from "./RightMenu";
@@ -6,15 +7,37 @@ import { Spin } from 'antd'
 
 import * as Subtitle from "subtitle";
 import * as constants from './constants.js';
-import { updateSingleArrayState, analyizeSubtitle, fixSubtitleEndTime } from "./utils";
+import { updateSingleArrayState, analyizeSubtitle, fixSubtitleEndTime, replaceNewLines }
+  from "./utils";
 import classnames from "classnames";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
+const initSettingsState = {
+  maxDuration: constants.MAX_SUB_DURATION * 0.001,
+  minDuration: constants.MIN_SUB_DURATION * 0.001,
+  avarageSpeed: constants.AVARAGE_READ_SPEED,
+}
+
+const settingsReducer = (state, action) => {
+  switch (action.type) {
+    case 'max-duration':
+      return { ...state, maxDuration: action.val };
+    case 'min-duration':
+      return { ...state, minDuration: action.val };
+    case 'avarage-speed':
+      return { ...state, avarageSpeed: action.val };
+
+    default:
+      return state;
+  }
+}
 const Home = props => {
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const [fixCount, setFixCount] = useState(0);
+  const [settings, dispatch] = useReducer(settingsReducer, initSettingsState);
 
   const dropFileHandler = useCallback(
     file => {
@@ -23,6 +46,13 @@ const Home = props => {
     [files]
   );
 
+  useEffect(() => {
+    // hack
+    // to do it later
+    constants.setValues(settings);
+
+  }, [settings]);
+
   const fileLoadHandler = useCallback(
     (fileID, fileContent) => {
       const parsedSub = Subtitle.parse(fileContent);
@@ -30,24 +60,40 @@ const Home = props => {
       // analize each sub object
       let w = 0,
         c = 0,
-        errors = 0;
+        timeErrors = 0,
+        lineErrors = 0;
 
       parsedSub.forEach(sub => {
-        const { wordsCount, charsCount, estimateTime } = analyizeSubtitle(sub.text);
+        const { wordsCount, charsCount, estimateTime, linesCount, firstLineChars } =
+          analyizeSubtitle(sub.text);
 
+        // custome action
+        sub.text = replaceNewLines(sub.text);
+        
         sub.charsCount = charsCount;
         sub.estimateTime = estimateTime;
 
         w += wordsCount;
         c += charsCount;
         if (Math.abs((estimateTime + sub.start) - sub.end) > constants.ERROR_THRESHOLD)
-          errors++;
+          timeErrors++;
+
+        if (linesCount === 1) {
+          if (charsCount > 42)
+            lineErrors++;
+        } else if (linesCount === 2) {
+          const secondLineCharsCount = charsCount - firstLineChars;
+
+          if (firstLineChars / secondLineCharsCount > .489)
+            lineErrors++;
+        } else
+          lineErrors++;
       });
 
       setFiles(prevFiles => {
         return updateSingleArrayState(
           fileID,
-          { parsedSub, wordsCount: w, charsCount: c, errors },
+          { parsedSub, wordsCount: w, charsCount: c, timeErrors, lineErrors },
           prevFiles
         );
       });
@@ -73,13 +119,12 @@ const Home = props => {
   }, []);
 
   const fixClickHandler = useCallback(() => {
-
     const newFiles = [];
 
     files.forEach((file) => {
       const { parsedSub } = file;
       const newParsedSub = [];
-      let errors = 0;
+      let timeErrors = 0;
 
       parsedSub.forEach((sub, idx) => {
         const nextEndtime = parsedSub[idx + 1] ? parsedSub[idx + 1].start : 1e9;
@@ -88,26 +133,33 @@ const Home = props => {
         newParsedSub.push(fixedSub);
 
         if (Math.abs(fixedSub.end - sub.start - sub.estimateTime) > constants.ERROR_THRESHOLD)
-          errors++;
+          timeErrors++;
       })
 
-      newFiles.push({ ...file, parsedSub: newParsedSub, errors });
+      newFiles.push({ ...file, fixedSub: newParsedSub, timeErrors });
     })
 
     setFiles(newFiles);
 
     downloadFilesHandler(newFiles);
 
+    setFixCount(fixCount + 1)
+
   }, [files])
 
+  const removeFileHandler = useCallback(
+    (id) => {
+      setFiles(files.filter(f => f.id !== id))
+    }, [files]
+  )
 
   const downloadFilesHandler = useCallback(
     (files) => {
       const zip = new JSZip();
 
       files.forEach((file, idx) => {
-        const { parsedSub } = file;
-        const srtString = Subtitle.stringify(parsedSub);
+        const { fixedSub } = file;
+        const srtString = Subtitle.stringify(fixedSub);
         zip.file(`fixed-${file.name}`, srtString);
       })
 
@@ -120,48 +172,66 @@ const Home = props => {
     }, [files])
 
 
-    const deleteFileHandler = useCallback((fileID) => {
 
-    })
+  const filesCard = useMemo(() => {
+    return files.map(file => (
+      <FileCard
+        id={file.id}
+        name={file.name}
+        size={file.size}
+        wordsCount={file.wordsCount}
+        charsCount={file.charsCount}
+        timeErrors={file.timeErrors}
+        lineErrors={file.lineErrors}
+        progress={file.progress}
+        onRemoveClicked={removeFileHandler}
+      />
+    ));
+  }, [files])
 
   return (
-    <Spin spinning={fixing}>
-      <main className="main">
-        <section className="work-area">
-          <Uploader
-            onDrop={dropFileHandler}
-            onLoadFile={fileLoadHandler}
-            onLoadProgress={fileLoadProgressHandler}
-            onDragOver={dragOverHandler}
-            onDragLeave={dragLeaveHandler}
-          >
-            <div className="files-grid">
-              {useMemo(() => {
-                return files.map(file => (
-                  <FileCard
-                    name={file.name}
-                    size={file.size}
-                    wordsCount={file.wordsCount}
-                    charsCount={file.charsCount}
-                    errors={file.errors}
-                    progress={file.progress}
-                  />
-                ));
-              }, [files])}
-            </div>
+    <>
+      <Header
+        settings={settings}
+        dispatch={dispatch}
+      />
 
-            <div className={classnames("overlay", { hide: !dragging })}>
-              <p className="overlay__msg">Drop it like it's hot!</p>
-            </div>
-          </Uploader>
-        </section>
+      <Spin spinning={fixing}>
+        <main className="main">
+          <section className="work-area">
+            <Uploader
+              onDrop={dropFileHandler}
+              onLoadFile={fileLoadHandler}
+              onLoadProgress={fileLoadProgressHandler}
+              onDragOver={dragOverHandler}
+              onDragLeave={dragLeaveHandler}
+            >
+              <div className="files-grid">
+                {filesCard}
+              </div>
 
-        <RighutMenu onFix={() => {
-          setFixing(true);
-          setTimeout(() => fixClickHandler(), 0)
-        }} />
-      </main>
-    </Spin>
+              {
+                !files.length &&
+                <h2 className="empty-msg">Drop STR Files Here To Fix</h2>
+              }
+
+              <div className={classnames("overlay", { hide: !dragging })}>
+                <p className="overlay__msg">Drop it like it's hot!</p>
+              </div>
+            </Uploader>
+          </section>
+
+          <RighutMenu
+            onFix={() => {
+              setFixing(true);
+              setTimeout(() => fixClickHandler(), 0)
+            }}
+            disableFixBtn={files.length === 0}
+            refix={fixCount !== 0}
+          />
+        </main>
+      </Spin>
+    </>
   );
 };
 
