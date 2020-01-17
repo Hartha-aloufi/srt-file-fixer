@@ -20,12 +20,12 @@ const FileCard = props => {
             className="file-card__close"
             type="close-circle"
             theme="filled"
-            onClick={props.onRemoveClicked}
+            onClick={() => props.onRemoveClicked(props.id)}
           />
         </div>
 
         <div className="file-card__body">
-          {!props.errors && (
+          {!(props.timeErrors || props.lineErrors) && (
             <>
               <Icon
                 className="file-card__file-icon file-card__file-icon--success"
@@ -35,14 +35,14 @@ const FileCard = props => {
             </>
           )}
 
-          {props.errors && (
+          {(props.timeErrors || props.lineErrors) && (
             <>
               <Icon
                 className="file-card__file-icon file-card__file-icon--error"
                 component={ErrorIcon}
               />
               <span className="file-card__status">
-                This File has {props.errors} errors.
+                This File has {props.lineErrors + props.timeErrors} errors.
               </span>
             </>
           )}
@@ -57,8 +57,12 @@ const FileCard = props => {
               <span>{props.wordsCount}</span>
             </li>
             <li className="file-card__details-item">
-              <span>Errors Count: </span>
-              <span>{props.errors || 0}</span>
+              <span>Time Errors: </span>
+              <span>{props.timeErrors || 0}</span>
+            </li>
+            <li className="file-card__details-item">
+              <span>Line Errors: </span>
+              <span>{props.lineErrors || 0}</span>
             </li>
           </ul>
         </div>
