@@ -108,6 +108,7 @@ body {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1.1rem;
+      row-gap: 40px;
     }
 
     .empty-msg {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useReducer, useEffect } from "react";
+import React, { useState, useCallback, useMemo, useReducer, useEffect, useRef } from "react";
 import Header from './Header'
 import Uploader from "./Uploader";
 import FileCard from "./FileCard";
@@ -38,6 +38,8 @@ const Home = props => {
   const [fixing, setFixing] = useState(false);
   const [fixCount, setFixCount] = useState(0);
   const [settings, dispatch] = useReducer(settingsReducer, initSettingsState);
+  const [girdColumns, setGridColumns] = useState(3)
+  const gridRef = useRef();
 
   const dropFileHandler = useCallback(
     file => {
@@ -52,6 +54,13 @@ const Home = props => {
     constants.setValues(settings);
 
   }, [settings]);
+
+  useEffect(() => {
+    if (!gridRef.current)
+      return;
+
+    setGridColumns(parseInt(gridRef.current.offsetWidth / 270));
+  }, [gridRef.current]);
 
   const fileLoadHandler = useCallback(
     (fileID, fileContent) => {
@@ -69,7 +78,7 @@ const Home = props => {
 
         // custome action
         sub.text = replaceNewLines(sub.text);
-        
+
         sub.charsCount = charsCount;
         sub.estimateTime = estimateTime;
 
@@ -166,7 +175,7 @@ const Home = props => {
       // generate zip file
       zip.generateAsync({ type: 'blob' }).then((content) => {
         // download files
-        saveAs(content, "files.zip");
+        saveAs(content, "fixed-srt-files.zip");
         setFixing(false);
       });
     }, [files])
@@ -206,7 +215,11 @@ const Home = props => {
               onDragOver={dragOverHandler}
               onDragLeave={dragLeaveHandler}
             >
-              <div className="files-grid">
+              <div ref={gridRef} className="files-grid"
+                style={{
+                  gridTemplateColumns: `repeat(${girdColumns}, 1fr)`
+                }}
+              >
                 {filesCard}
               </div>
 
