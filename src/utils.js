@@ -33,6 +33,8 @@ export const analyizeSubtitle = (subtitle) => {
     for (let i = 0; i < subtitle.length; i++) {
         const ch = subtitle.charAt(i);
 
+        // to do in better way
+        
         // don't count the tashkeels
         if (isTashkeela(ch))
             continue;
@@ -138,6 +140,15 @@ export const fixSubtitleEndTime = (sub, maxTime) => {
     }
 }
 
+export const compineTowSubs = (sub1, sub2) => {
+    return {
+        text: `${sub1.text}\n${sub2.text}`,
+        start: sub1.start,
+        end: sub2.end,
+    }
+}
+
+
 export const updateSingleArrayState = (elemID, newData, arrState) => {
     const updatedArr = arrState.map(elm => {
         if (elm.id === elemID)
@@ -149,7 +160,27 @@ export const updateSingleArrayState = (elemID, newData, arrState) => {
     return updatedArr;
 }
 
-
 export const replaceNewLines = (subText) => {
     return subText.replace('#', '\n');
+}
+
+export const stringifyHardErrors = (errors) => {
+    const arr = errors.reduce((prev = '', cur, idx) => {
+
+    })
+} 
+
+export const compineSubWithHardErrors = (sub, hardErrors) => {
+    const finalSub = []
+
+    sub.forEach((s, idx) => {
+        let text = s.text;
+        if(hardErrors[idx+1]) {
+            text += `\n\n***"${hardErrors[idx+1].toString()}"`
+        }        
+
+        finalSub.push({...s, text})
+    });
+
+    return finalSub
 }

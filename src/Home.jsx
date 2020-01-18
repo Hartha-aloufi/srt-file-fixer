@@ -7,7 +7,7 @@ import { Spin } from 'antd'
 
 import * as Subtitle from "subtitle";
 import * as constants from './constants.js';
-import { updateSingleArrayState, analyizeSubtitle, fixSubtitleEndTime, replaceNewLines }
+import { updateSingleArrayState, analyizeSubtitle, fixSubtitleEndTime, replaceNewLines, compineTowSubs, compineSubWithHardErrors }
   from "./utils";
 import classnames from "classnames";
 import JSZip from 'jszip';
@@ -64,7 +64,9 @@ const Home = props => {
 
   const fileLoadHandler = useCallback(
     (fileID, fileContent) => {
-      const parsedSub = Subtitle.parse(fileContent);
+      let parsedSub = Subtitle.parse(fileContent);
+      // to be done in better way
+      const hardErrors = [];
 
       // analize each sub object
       let w = 0,
@@ -72,7 +74,17 @@ const Home = props => {
         timeErrors = 0,
         lineErrors = 0;
 
-      parsedSub.forEach(sub => {
+      parsedSub = parsedSub.filter((sub, idx, subs) => {
+        if (sub.text.endsWith('###')) {
+          sub.text = sub.text.replace('###', '')
+          parsedSub[idx + 1] = compineTowSubs(sub, subs[idx + 1]);
+          return false;
+        }
+
+        return true;
+      })
+
+      parsedSub.forEach((sub, subIdx) => {
         const { wordsCount, charsCount, estimateTime, linesCount, firstLineChars } =
           analyizeSubtitle(sub.text);
 
@@ -84,25 +96,38 @@ const Home = props => {
 
         w += wordsCount;
         c += charsCount;
-        if (Math.abs((estimateTime + sub.start) - sub.end) > constants.ERROR_THRESHOLD)
+        if (Math.abs((estimateTime + sub.start) - sub.end) > constants.ERROR_THRESHOLD) {
           timeErrors++;
+        }
 
+        // all line errors are hard; conn't fixed automaticlly
         if (linesCount === 1) {
-          if (charsCount > 42)
+          if (charsCount > 42) {
             lineErrors++;
+            // to be done in better way
+            if(!hardErrors[subIdx + 1]) hardErrors[subIdx + 1] = []
+            hardErrors[subIdx + 1].push('عدد الاحرف اكبر من 42')
+          }
         } else if (linesCount === 2) {
           const secondLineCharsCount = charsCount - firstLineChars;
 
-          if (firstLineChars / secondLineCharsCount > .489)
+          if (firstLineChars / secondLineCharsCount > .489) {
             lineErrors++;
-        } else
+            if(!hardErrors[subIdx + 1]) hardErrors[subIdx + 1] = []
+            hardErrors[subIdx + 1].push('عدد الاحرف في السطر الثاني اقل من نصفها في السطر الاول')
+          }
+        } else {
           lineErrors++;
+
+          if(!hardErrors[subIdx + 1]) hardErrors[subIdx + 1] = []
+          hardErrors[subIdx + 1].push('عدد الاسطر اكثر من ثلاثة')
+        }
       });
 
       setFiles(prevFiles => {
         return updateSingleArrayState(
           fileID,
-          { parsedSub, wordsCount: w, charsCount: c, timeErrors, lineErrors },
+          { parsedSub, wordsCount: w, charsCount: c, timeErrors, lineErrors, hardErrors },
           prevFiles
         );
       });
@@ -131,7 +156,7 @@ const Home = props => {
     const newFiles = [];
 
     files.forEach((file) => {
-      const { parsedSub } = file;
+      const { parsedSub, hardErrors } = file;
       const newParsedSub = [];
       let timeErrors = 0;
 
@@ -141,8 +166,11 @@ const Home = props => {
 
         newParsedSub.push(fixedSub);
 
-        if (Math.abs(fixedSub.end - sub.start - sub.estimateTime) > constants.ERROR_THRESHOLD)
+        if (Math.abs(fixedSub.end - sub.start - sub.estimateTime) > constants.ERROR_THRESHOLD) {
+          if(!hardErrors[idx + 1]) hardErrors[idx + 1] = []
+          hardErrors[idx + 1].push('مدة عرض الترجمة غير مناسب, وقت بداية التارجمة التالية قريب جدا');
           timeErrors++;
+        }
       })
 
       newFiles.push({ ...file, fixedSub: newParsedSub, timeErrors });
@@ -167,8 +195,11 @@ const Home = props => {
       const zip = new JSZip();
 
       files.forEach((file, idx) => {
-        const { fixedSub } = file;
-        const srtString = Subtitle.stringify(fixedSub);
+        const { fixedSub, hardErrors } = file;
+        // to bo done in better way
+        const finalSub = compineSubWithHardErrors(fixedSub, hardErrors)
+
+        const srtString = Subtitle.stringify(finalSub);
         zip.file(`fixed-${file.name}`, srtString);
       })
 
@@ -181,7 +212,7 @@ const Home = props => {
     }, [files])
 
 
-
+    
   const filesCard = useMemo(() => {
     return files.map(file => (
       <FileCard
