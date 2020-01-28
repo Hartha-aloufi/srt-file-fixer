@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useMemo, useReducer, useEffect, useRef } from "react";
-import Header from './Header'
-import Uploader from "./Uploader";
-import FileCard from "./FileCard";
+import Header from '../ui/Header/Header'
+import Dropzone from "../Dropzone/Dropzone";
+import FileCard from "../FileCard/FileCard";
 import RighutMenu from "./RightMenu";
 import { Spin } from 'antd'
 
 import * as Subtitle from "subtitle";
-import * as constants from './constants.js';
+import * as constants from '../../constants.js';
 import { updateSingleArrayState, analyizeSubtitle, fixSubtitleEndTime, replaceNewLines, compineTowSubs, compineSubWithHardErrors }
-  from "./utils";
+  from "../../utils";
 import classnames from "classnames";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -239,7 +239,7 @@ const Home = props => {
       <Spin spinning={fixing}>
         <main className="main">
           <section className="work-area">
-            <Uploader
+            <Dropzone
               onDrop={dropFileHandler}
               onLoadFile={fileLoadHandler}
               onLoadProgress={fileLoadProgressHandler}
@@ -256,13 +256,13 @@ const Home = props => {
 
               {
                 !files.length &&
-                <h2 className="empty-msg">Drop STR Files Here To Fix</h2>
+                <div className="empty-msg">Drop STR Files Here To Fix</div>
               }
 
               <div className={classnames("overlay", { hide: !dragging })}>
                 <p className="overlay__msg">Drop it like it's hot!</p>
               </div>
-            </Uploader>
+            </Dropzone>
           </section>
 
           <RighutMenu

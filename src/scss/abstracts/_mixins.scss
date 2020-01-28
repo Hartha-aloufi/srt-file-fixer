@@ -1,0 +1,21 @@
+@mixin respond($brakpoint) {
+    @if $brakpoint == phone-sm {
+        @media (max-width: 320px) {@content};
+    }
+
+    @if $brakpoint == phone {
+        @media (max-width: 425px) {@content};
+    }
+
+    @if $brakpoint == tab-port {
+        @media (max-width: 768px) {@content};
+    }
+
+    @if $brakpoint == tab-land {
+        @media (max-width: 1024px) {@content};
+    }
+    
+    @if $brakpoint == desktop {
+        @media (min-width: 1439px) {@content};
+    }
+}

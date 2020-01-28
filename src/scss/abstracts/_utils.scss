@@ -1,0 +1,41 @@
+.disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.hide {
+  display: none !important;
+}
+
+.scrollable {
+  overflow: hidden auto;
+
+  /* Scrollbar styles */
+  &::-webkit-scrollbar {
+    width: 0.45rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    opacity: 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #9a9a9a;
+    border-radius: 15px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgb(134, 133, 133);
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background: rgb(116, 115, 115);
+  }
+
+  &--horizontal {
+    overflow: auto hidden;
+    &::-webkit-scrollbar {
+      height: 0.4rem;
+    }
+  }
+}

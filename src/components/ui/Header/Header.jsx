@@ -1,5 +1,5 @@
 import React from 'react';
-import Settings from './Settings';
+import Settings from '../../FixSettings/Settings';
 
 const header = props => {
     return (

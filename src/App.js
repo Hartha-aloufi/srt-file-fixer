@@ -1,12 +1,9 @@
 import React from 'react';
-import Header from './Header';
-import Home from './Home';
+import Home from './components/Dashboard/Dashboard';
 
-import './App.css';
 import 'react-notifications/lib/notifications.css';
 import 'antd/dist/antd.css';
 
-import './test/testData';
 import {NotificationContainer} from 'react-notifications';
 
 function App() {

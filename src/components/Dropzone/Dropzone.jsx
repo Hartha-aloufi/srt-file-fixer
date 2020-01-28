@@ -1,5 +1,6 @@
 import React, {useCallback} from 'react';
 import {useDropzone} from 'react-dropzone'
+
 import { NotificationManager } from 'react-notifications';
 import uuid from 'uuid';
 
@@ -41,7 +42,7 @@ const Uploader = (props) => {
         }, []
     );
 
-    const { getRootProps, getInputProps } = useDropzone({ onDrop, onDragLeave, onDragEnter})
+    const { getRootProps, getInputProps} = useDropzone({ onDrop, onDragLeave, onDragEnter})
 
     return (
         <div className="drop-zone" {...getRootProps()}>

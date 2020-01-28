@@ -1,6 +1,5 @@
 import React from 'react';
-import Button from './Button'
-import Settings from './Settings';
+import {Button} from 'antd';
 
 const RightMenu = (props) => {
     return (
@@ -22,7 +21,7 @@ const RightMenu = (props) => {
               
             </div>
             <div className="right-menu__footer">
-                <Button disabled={props.disableFixBtn} type="primary" onClick={props.onFix} >
+                <Button disabled={props.disableFixBtn} block type="primary" size="large" onClick={props.onFix} >
                     {
                         props.refix ? 'Refix Files' : 'Fix Files'
                     }
