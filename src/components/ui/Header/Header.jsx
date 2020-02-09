@@ -1,5 +1,5 @@
 import React from 'react';
-import Settings from '../../FixSettings/Settings';
+import FixSettings from '../../FixSettings/FixSettings';
 
 const header = props => {
     return (
@@ -12,7 +12,7 @@ const header = props => {
                 the RightMenu so that all it's css classes refare to it
                 and I'm layze to do renaming
             */}
-            <Settings dispatch={props.dispatch} settings={props.settings} />
+            <FixSettings dispatch={props.dispatch} settings={props.settings} />
         </header>
     )
 }

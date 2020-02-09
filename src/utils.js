@@ -66,7 +66,6 @@ export const analyizeSubtitle = (subtitle) => {
     };
 }
 
-window.calc = analyizeSubtitle;
 
 /***
  * احسب علاامتا الترقيم
